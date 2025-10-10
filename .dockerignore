@@ -1,0 +1,6 @@
+# Exclude virtual environment, PyCharm files, and cache
+.venv
+__pycache__
+.idea
+.git
+.gitignore

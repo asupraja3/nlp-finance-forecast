@@ -1,0 +1,7 @@
+pyspark
+pandas
+transformers
+torch
+yfinance
+mlflow
+scikit-learn # For quick checks and metrics
