@@ -5,3 +5,8 @@ torch
 yfinance
 mlflow
 scikit-learn # For quick checks and metrics
+
+# --- Airflow Core Dependencies ---
+apache-airflow-providers-standard # REQUIRED for BashOperator and FileSensor
+# You might also want to explicitly pin your Airflow version for production
+# apache-airflow==3.0.0
