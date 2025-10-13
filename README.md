@@ -1,4 +1,4 @@
-# Stock Sentiment & Prediction Pipeline
+# Automated MLOps Pipeline for Financial News Sentiment Analysis
 
 An automated, end-to-end data pipeline that uses financial news sentiment to inform a stock price prediction model. This project is orchestrated with Apache Airflow and runs entirely in a containerized Docker environment for consistency and scalability.
 
