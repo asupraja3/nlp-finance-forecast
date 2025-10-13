@@ -4,12 +4,13 @@ An automated, end-to-end data pipeline that uses financial news sentiment to inf
 Pipeline Architecture
 The pipeline runs on a daily schedule, moving from raw data ingestion to a final trained model in four distinct stages.
 
+```mermaid
 graph TD
     subgraph "1. Ingestion"
         A[yfinance Stock Data] --> C{Staging};
         B[FileSensor for News Data] --> C;
     end
-
+    
     subgraph "2. Staging"
         C --> D[Copy to Pre-processed];
     end
@@ -25,6 +26,7 @@ graph TD
         E --> G[scikit-learn Model];
         G --> H[Log with MLflow];
     end
+```
 
 Tech Stack 🛠️
 Orchestrator: Apache Airflow
