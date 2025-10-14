@@ -8,11 +8,6 @@ The pipeline runs on a daily schedule, moving from raw data ingestion to a final
 
 ```mermaid
 graph TD
-    %% Define Styles for the Future Work loop
-    style M fill:#fff,stroke:#f00,stroke-width:2px,stroke-dasharray: 5 5
-    linkStyle 7 stroke-width:2px,fill:none,stroke:red,stroke-dasharray: 3 3
-    linkStyle 8 stroke-width:2px,fill:none,stroke:red,stroke-dasharray: 3 3
-    
     %% --- Main Workflow ---
     A[1. Ingest Data<br/>(Stocks & News)] --> B[2. Process Data<br/>(PySpark + NLP)];
     B --> C{3. Retrain Model?};
