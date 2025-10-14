@@ -9,20 +9,21 @@ The pipeline runs on a daily schedule, moving from raw data ingestion to a final
 ```mermaid
 graph TD
     %% --- Main Workflow ---
-    A[1. Ingest Data<br/>(Stocks & News)] --> B[2. Process Data<br/>(PySpark + NLP)];
+    A["1. Ingest Data<br/>(Stocks & News)"] --> B["2. Process Data<br/>(PySpark + NLP)"];
     B --> C{3. Retrain Model?};
     
-    C -- Yes --> D[Train & Log New Model];
-    C -- No --> E[Load Existing Model];
+    C -- Yes --> D["Train & Log New Model"];
+    C -- No --> E["Load Existing Model"];
     
-    D --> F[4. Run Inference];
+    D --> F["4. Run Inference"];
     E --> F;
     
-    F --> G[5. 📊 Update Streamlit App];
+    F --> G["5. 📊 Update Streamlit App"];
 
     %% --- Future Work Loop (Dotted Lines) ---
     F -.-> M(Monitor for Drift);
     M -.-> C;
+
 ```
 
 ---
