@@ -4,7 +4,7 @@ An automated, end-to-end data pipeline that uses financial news sentiment to inf
 
 ### Pipeline Architecture
 
-The pipeline runs on a daily schedule, moving from raw data ingestion to a final trained model in four distinct stages.
+The pipeline runs on a daily schedule, moving from raw data ingestion to a final trained model in distinct stages.
 
 ```mermaid
 graph TD
