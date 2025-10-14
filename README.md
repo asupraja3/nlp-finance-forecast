@@ -22,7 +22,7 @@ graph TD
     end
 
     %% --- The Decision Point ---
-    E --> I{Retrain Model?};
+    E --> I{Train Model?};
 
     subgraph "4a. Training Path"
         I -- Yes --> G[Train scikit-learn Model];
@@ -43,7 +43,7 @@ graph TD
     end
 
     %% --- Future Work: Monitoring Loop ---
-    subgraph "Future: Monitoring Loop"
+    subgraph "Future Work: Monitoring Loop"
         K -.-> M[Monitor Predictions & Data];
         M -.-> N{Drift Detected?};
         N -- Yes --> O[Trigger Alert & Flag for Retraining];
