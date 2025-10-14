@@ -21,7 +21,7 @@ graph TD
     F --> G["5. 📊 Update Streamlit App"];
 
     %% --- Future Work Loop (Dotted Lines) ---
-    F -.-> M(Monitor for Drift);
+    F -.-> M(Future work: Monitor for Drift);
     M -.-> C;
 
 ```
