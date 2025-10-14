@@ -10,7 +10,7 @@ The pipeline runs on a daily schedule, moving from raw data ingestion to a final
 graph TD
     %% --- Main Workflow ---
     A["1. Ingest Data<br/>(Stocks & News)"] --> B["2. Process Data<br/>(PySpark + NLP)"];
-    B --> C{3. Retrain Model?};
+    B --> C{3. Train Model?};
     
     C -- Yes --> D["Train & Log New Model"];
     C -- No --> E["Load Existing Model"];
