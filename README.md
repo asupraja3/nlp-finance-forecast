@@ -22,7 +22,7 @@ graph TD
     end
 
     %% --- The Decision Point ---
-    E --> I{Retrain Model?};
+    E --> I{Train Model?};
 
     subgraph "4a. Training Path"
         I -- Yes --> G[Train scikit-learn Model];
