@@ -8,47 +8,26 @@ The pipeline runs on a daily schedule, moving from raw data ingestion to a final
 
 ```mermaid
 graph TD
-    subgraph "1. Ingestion"
-        A[yfinance Stock Data] --> C{Staging};
-        B[FileSensor for News Data] --> C;
-    end
-
-    subgraph "2. Staging"
-        C --> D[Copy to Pre-processed];
-    end
-
-    subgraph "3. Processing"
-        D --> E[PySpark Job with Sentiment Analysis];
-    end
-
-    %% --- The Decision Point ---
-    E --> I{Train Model?};
-
-    subgraph "4a. Training Path"
-        I -- Yes --> G[Train scikit-learn Model];
-        G --> H[Log New Model to MLflow];
-    end
-
-    subgraph "4b. Inference-Only Path"
-        I -- No --> J[Load Existing Model from MLflow];
-    end
-
-    subgraph "5. Inference"
-        H --> K[Run Inference on New Data];
-        J --> K;
-    end
+    %% Define Styles for the Future Work loop
+    style M fill:#fff,stroke:#f00,stroke-width:2px,stroke-dasharray: 5 5
+    linkStyle 7 stroke-width:2px,fill:none,stroke:red,stroke-dasharray: 3 3
+    linkStyle 8 stroke-width:2px,fill:none,stroke:red,stroke-dasharray: 3 3
     
-    subgraph "6. Presentation"
-        K --> L[📊 Update Streamlit App];
-    end
+    %% --- Main Workflow ---
+    A[1. Ingest Data<br/>(Stocks & News)] --> B[2. Process Data<br/>(PySpark + NLP)];
+    B --> C{3. Retrain Model?};
+    
+    C -- Yes --> D[Train & Log New Model];
+    C -- No --> E[Load Existing Model];
+    
+    D --> F[4. Run Inference];
+    E --> F;
+    
+    F --> G[5. 📊 Update Streamlit App];
 
-    %% --- Future Work: Monitoring Loop ---
-    subgraph "Future Work: Monitoring Loop"
-        K -.-> M[Monitor Predictions & Data];
-        M -.-> N{Drift Detected?};
-        N -- Yes --> O[Trigger Alert & Flag for Retraining];
-        N -- No --> P[End Cycle];
-    end
+    %% --- Future Work Loop (Dotted Lines) ---
+    F -.-> M(Monitor for Drift);
+    M -.-> C;
 ```
 
 ---
