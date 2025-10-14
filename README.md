@@ -22,7 +22,7 @@ graph TD
     end
 
     %% --- The Decision Point ---
-    E --> I{Train Model?};
+    E --> I{Retrain Model?};
 
     subgraph "4a. Training Path"
         I -- Yes --> G[Train scikit-learn Model];
@@ -33,13 +33,19 @@ graph TD
         I -- No --> J[Load Existing Model from MLflow];
     end
 
-    subgraph "5. Inference & Presentation"
-        %% Both paths lead to the inference task, which then updates the dashboard
+    subgraph "5. Inference"
         H --> K[Run Inference on New Data];
         J --> K;
+    end
+    
+    subgraph "6. Presentation"
         K --> L[📊 Update Streamlit App];
-        K --> M[Monitor Predictions & Data];
-        M --> N{Drift Detected?};
+    end
+
+    %% --- Future Work: Monitoring Loop ---
+    subgraph "Future: Monitoring Loop"
+        K -.-> M[Monitor Predictions & Data];
+        M -.-> N{Drift Detected?};
         N -- Yes --> O[Trigger Alert & Flag for Retraining];
         N -- No --> P[End Cycle];
     end
