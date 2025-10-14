@@ -38,6 +38,10 @@ graph TD
         H --> K[Run Inference on New Data];
         J --> K;
         K --> L[📊 Update Streamlit App];
+        K --> M[Monitor Predictions & Data];
+        M --> N{Drift Detected?};
+        N -- Yes --> O[Trigger Alert & Flag for Retraining];
+        N -- No --> P[End Cycle];
     end
 ```
 
