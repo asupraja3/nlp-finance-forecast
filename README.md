@@ -12,21 +12,32 @@ graph TD
         A[yfinance Stock Data] --> C{Staging};
         B[FileSensor for News Data] --> C;
     end
-    
+
     subgraph "2. Staging"
         C --> D[Copy to Pre-processed];
     end
 
     subgraph "3. Processing"
-        D --> E[PySpark Job];
-        subgraph "Feature Engineering"
-            F[Hugging Face for Sentiment Analysis] --> E;
-        end
+        D --> E[PySpark Job with Sentiment Analysis];
     end
 
-    subgraph "4. Model Training"
-        E --> G[scikit-learn Model];
-        G --> H[Log with MLflow];
+    %% --- The Decision Point ---
+    E --> I{Retrain Model?};
+
+    subgraph "4a. Training Path"
+        I -- Yes --> G[Train scikit-learn Model];
+        G --> H[Log New Model to MLflow];
+    end
+
+    subgraph "4b. Inference-Only Path"
+        I -- No --> J[Load Existing Model from MLflow];
+    end
+
+    subgraph "5. Inference & Presentation"
+        %% Both paths lead to the inference task, which then updates the dashboard
+        H --> K[Run Inference on New Data];
+        J --> K;
+        K --> L[📊 Update Streamlit App];
     end
 ```
 
@@ -40,6 +51,7 @@ graph TD
 * **NLP:** Hugging Face Transformers
 * **ML:** `scikit-learn` & `MLflow`
 * **Data Sources:** `yfinance`
+* **Dashboard:** `Streamlit`
 
 ---
 
@@ -47,7 +59,7 @@ graph TD
 
 **Prerequisites:** Docker Desktop & Astro CLI must be installed.
 
-1.  **Clone the repo:** `git clone <your-repo-url>`
+1.  **Clone the repo:** `git clone https://github.com/asupraja3/nlp-finance-forecast.git`
 2.  **Navigate to the directory:** `cd nlp-finance-forecast`
 3.  **Start the environment:** `astro dev start`
 
