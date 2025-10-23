@@ -1,4 +1,3 @@
-
 # This script is the core "Process Data (PySpark + NLP)" step of your workflow.
 # It is designed to be executed by your Airflow DAG's BashOperator
 # Its job is to:
@@ -23,7 +22,7 @@ from pyspark.sql.functions import (
     coalesce,
     lit
 )
-# from pyspark.sql.types import FloatType, StringType, DoubleType, DateType
+from pyspark.sql.types import FloatType, StringType, DoubleType, DateType
 
 # --- Real-Time AI Engineer Connection: Model Loading ---
 # In a real-time system at a firm like Citadel, this NLP model would NOT
