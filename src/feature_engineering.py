@@ -1,8 +1,6 @@
-# --- src/feature_engineering.py ---
-# This script is the core "Process Data (PySpark + NLP)" step of your workflow.
-# It is designed to be executed by your Airflow DAG's BashOperator.
-#
 
+# This script is the core "Process Data (PySpark + NLP)" step of your workflow.
+# It is designed to be executed by your Airflow DAG's BashOperator
 # Its job is to:
 # 1. Load the raw stock and news data from the '/pre-processed' directory.
 # 2. Clean and transform the data (e.g., fix types, handle junk rows).
