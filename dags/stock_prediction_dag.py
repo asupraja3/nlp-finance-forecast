@@ -55,7 +55,7 @@ with DAG(
     # --- Task 1: Ingest Stock Data ---
     ingest_stock_data = BashOperator(
         task_id="ingest_stock_data",
-        bash_command="python /opt/airflow/src/ingest.py",
+        bash_command="python /opt/airflow/src/data_ingestion.py",
         doc_md="Fetches the latest daily stock prices into the /raw landing zone.",
     )
 
@@ -82,7 +82,7 @@ with DAG(
     # --- Task 4: Process and Feature Engineer ---
     process_data = BashOperator(
         task_id="process_and_feature_engineer",
-        bash_command="python /opt/airflow/src/process.py",
+        bash_command="python /opt/airflow/src/feature_engineering.py",
         doc_md="Consumes staged data, runs PySpark sentiment/feature job, and saves to /processed.",
     )
 
@@ -121,28 +121,46 @@ with DAG(
         task_id="skip_model_training"
     )
 
-    # --- Task 7: Pipeline Complete ---
-    # This final task will run after *either* the 'train_model' or
-    # 'skip_model_training' task finishes.
-    # The `trigger_rule` is crucial: it ensures this task runs as long
-    # as one of the upstream branches (train or skip) completes successfully.
-    pipeline_complete = EmptyOperator(
-        task_id="pipeline_complete",
+    # --- *** NEW TASK: 7. Run Inference *** ---
+    # This task runs *after* either training or skipping is done.
+    # It uses the same trigger rule as your final step.
+    # This script (predict.py) would load the latest model from MLflow
+    # and the data from /processed, then save a prediction.
+    run_inference = BashOperator(
+        task_id="run_inference",
+        bash_command="python /opt/airflow/src/predict.py",
+        doc_md="Loads latest model and processed data to generate a new prediction.",
         trigger_rule=TriggerRule.NONE_FAILED_MIN_ONE_SUCCESS
     )
 
+    # --- *** NEW TASK: 8. Update Streamlit App *** ---
+    # This is a simple way to "refresh" a Streamlit app.
+    # If the Streamlit app is programmed to reload when this file
+    # is modified, this command will trigger it.
+    update_streamlit_app = BashOperator(
+        task_id="update_streamlit_app",
+        bash_command="touch /opt/airflow/streamlit/prediction_output.csv",
+        doc_md="Updates the prediction file, signaling Streamlit to refresh.",
+    )
 
-    # --- Task Dependencies ---
-    # 1. Ingest and wait for files in parallel.
-    # 2. When both are done, stage the files.
-    # 3. When staging is done, process the data.
-    # 4. When processing is done, run the branching logic.
-    # 5. The branching logic will trigger *either* train_model *or* skip_training.
-    # 6. When the selected branch is complete, mark the pipeline as complete.
+    # --- Task 9: Pipeline Complete (Final Step) ---
+    pipeline_complete = EmptyOperator(
+        task_id="pipeline_complete"
+    )
 
+    # --- *** NEW Task Dependencies *** ---
+
+    # Steps 1-4: Ingest, Stage, Process
     [ingest_stock_data, wait_for_news_data] >> stage_raw_files >> process_data
 
+    # Step 5: Branching
     process_data >> branch_op >> [train_model, skip_training]
 
-    train_model >> pipeline_complete
-    skip_training >> pipeline_complete
+    # Step 6: Inference (runs after either branch)
+    [train_model, skip_training] >> run_inference
+
+    # Step 7: Update App
+    run_inference >> update_streamlit_app
+
+    # Step 8: Complete
+    update_streamlit_app >> pipeline_complete
