@@ -1,10 +1,13 @@
-pyspark
-pandas
-transformers
-torch
+# For Data Processing & ML (must be in Airflow env)
+pyspark==3.5.0
+pandas==2.1.0
+transformers==4.35.0
+torch==2.1.0 # Transformers (FinBERT) needs either torch or tensorflow
 yfinance
 mlflow
 scikit-learn # For quick checks and metrics
+# For the Dashboard (can be in a separate env)
+streamlit==1.28.0
 
 # --- Airflow Core Dependencies ---
 apache-airflow-providers-standard # REQUIRED for BashOperator and FileSensor
