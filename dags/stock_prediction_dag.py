@@ -5,6 +5,7 @@ from airflow.models.dag import DAG
 from airflow.operators.bash import BashOperator
 from airflow.operators.empty import EmptyOperator
 from airflow.sensors.filesystem import FileSensor
+# from airflow.providers.standard.sensors.filesystem import FileSensor
 from airflow.utils.trigger_rule import TriggerRule
 
 # --- DAG Definition ---
@@ -55,14 +56,16 @@ with DAG(
     # --- Task 1: Ingest Stock Data ---
     ingest_stock_data = BashOperator(
         task_id="ingest_stock_data",
-        bash_command="python /opt/airflow/src/data_ingestion.py",
+        bash_command="python /usr/local/airflow/src/data_ingestion.py",
         doc_md="Fetches the latest daily stock prices into the /raw landing zone.",
     )
 
     # --- Task 2: Wait for News Data ---
     wait_for_news_data = FileSensor(
         task_id="wait_for_news_data",
-        filepath="/opt/airflow/data/raw/news_data.csv",
+        fs_conn_id="fs_default",  # <-- add this
+        filepath="data/raw/news_data.csv",  # <-- relative to the connection's base path
+        # filepath="/usr/local/airflow/data/raw/news_data.csv",
         poke_interval=30,
         timeout=600,
         mode="poke",
@@ -73,8 +76,8 @@ with DAG(
     stage_raw_files = BashOperator(
         task_id="stage_raw_files",
         bash_command="""
-            mkdir -p /opt/airflow/data/pre-processed && \
-            cp /opt/airflow/data/raw/*.csv /opt/airflow/data/pre-processed/
+            mkdir -p /usr/local/airflow/data/pre-processed && \
+            cp /usr/local/airflow/data/raw/*.csv /usr/local/airflow/data/pre-processed/
         """,
         doc_md="Copies raw data from the landing zone (/raw) to the staging area (/pre-processed).",
     )
@@ -82,7 +85,7 @@ with DAG(
     # --- Task 4: Process and Feature Engineer ---
     process_data = BashOperator(
         task_id="process_and_feature_engineer",
-        bash_command="python /opt/airflow/src/feature_engineering.py",
+        bash_command="python /usr/local/airflow/src/feature_engineering.py",
         doc_md="Consumes staged data, runs PySpark sentiment/feature job, and saves to /processed.",
     )
 
@@ -110,7 +113,7 @@ with DAG(
     # --- Task 6.A: Train Model (The "Yes" path) ---
     train_model = BashOperator(
         task_id="train_prediction_model",
-        bash_command="python /opt/airflow/src/train.py",
+        bash_command="python /usr/local/airflow/src/train.py",
         doc_md="Trains a model using the final processed data and logs it with MLflow.",
     )
 
@@ -128,7 +131,7 @@ with DAG(
     # and the data from /processed, then save a prediction.
     run_inference = BashOperator(
         task_id="run_inference",
-        bash_command="python /opt/airflow/src/predict.py",
+        bash_command="python /usr/local/airflow/src/predict.py",
         doc_md="Loads latest model and processed data to generate a new prediction.",
         trigger_rule=TriggerRule.NONE_FAILED_MIN_ONE_SUCCESS
     )
@@ -139,7 +142,7 @@ with DAG(
     # is modified, this command will trigger it.
     update_streamlit_app = BashOperator(
         task_id="update_streamlit_app",
-        bash_command="touch /opt/airflow/streamlit/prediction_output.csv",
+        bash_command="touch /usr/local/airflow/streamlit/prediction_output.csv",
         doc_md="Updates the prediction file, signaling Streamlit to refresh.",
     )
 

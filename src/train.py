@@ -64,12 +64,12 @@ def train_model(spark):
     """
 
     # --- Define File Paths ---
-    INPUT_PATH = "/opt/airflow/data/processed/features.parquet"
-    MODEL_OUTPUT_PATH = "/opt/airflow/models/stock_predictor_model"
+    INPUT_PATH = "/usr/local/airflow/data/processed/features.parquet"
+    MODEL_OUTPUT_PATH = "/usr/local/airflow/models/stock_predictor_model"
 
     # Ensure the /models directory exists
     # This path is relative to the Airflow worker
-    os.makedirs("/opt/airflow/models", exist_ok=True)
+    os.makedirs("/usr/local/airflow/models", exist_ok=True)
 
     print(f"Starting model training...")
     print(f"Loading features from: {INPUT_PATH}")

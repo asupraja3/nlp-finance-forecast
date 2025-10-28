@@ -22,15 +22,15 @@ def run_inference(spark):
     """
 
     # --- Define File Paths ---
-    MODEL_PATH = "/opt/airflow/models/stock_predictor_model"
-    DATA_PATH = "/opt/airflow/data/processed/features.parquet"
+    MODEL_PATH = "/usr/local/airflow/models/stock_predictor_model"
+    DATA_PATH = "/usr/local/airflow/data/processed/features.parquet"
 
     # This is the critical output file your Streamlit app will read
     # and your 'update_streamlit_app' DAG task will 'touch'.
-    OUTPUT_PATH = "/opt/airflow/streamlit/prediction_output.csv"
+    OUTPUT_PATH = "/usr/local/airflow/streamlit/prediction_output.csv"
 
     # Ensure the /streamlit directory exists
-    os.makedirs("/opt/airflow/streamlit", exist_ok=True)
+    os.makedirs("/usr/local/airflow/streamlit", exist_ok=True)
 
     print(f"Starting inference...")
 

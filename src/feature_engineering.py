@@ -114,11 +114,11 @@ def process_data(spark):
     # We assume the 'stage_raw_files' task already ran.
     #
     # Input paths
-    STOCK_DATA_PATH = "/opt/airflow/data/pre-processed/stock_prices.csv"
-    NEWS_DATA_PATH = "/opt/airflow/data/pre-processed/news_data.csv"
+    STOCK_DATA_PATH = "/usr/local/airflow/data/pre-processed/stock_prices.csv"
+    NEWS_DATA_PATH = "/usr/local/airflow/data/pre-processed/news_data.csv"
 
     # Output path
-    OUTPUT_PATH = "/opt/airflow/data/processed/features.parquet"
+    OUTPUT_PATH = "/usr/local/airflow/data/processed/features.parquet"
 
     print(f"Starting data processing...")
     print(f"Reading stock data from: {STOCK_DATA_PATH}")
