@@ -30,13 +30,14 @@ graph TD
 
 ### Tech Stack 🛠️
 
-* **Orchestrator:** Apache Airflow
+* **Orchestrator:** Apache Airflow (operators: BashOperator, FileSensor, EmptyOperator; uses pendulum)
 * **Environment:** Docker & Astro CLI
 * **Data Processing:** Apache Spark (`pyspark`)
-* **NLP:** Hugging Face Transformers
+* **NLP:** Hugging Face Transformers (FinBERT)
 * **ML:** `scikit-learn` & `MLflow`
-* **Data Sources:** `yfinance`
+* **Data Sources:** `yfinance`, `parquet`, `CSV`
 * **Dashboard:** `Streamlit`
+* **Dev & Test:** PyCharm, Jupyter notebooks, pytest (tests/), Git / GitHub
 
 ---
 
