@@ -76,7 +76,7 @@ with DAG(
     stage_raw_files = BashOperator(
         task_id="stage_raw_files",
         bash_command="""
-            mkdir -p /usr/local/airflow/data/pre-processed && \
+            mkdir -p /usr/local/airflow/data/pre-processed && \ 
             cp /usr/local/airflow/data/raw/*.csv /usr/local/airflow/data/pre-processed/
         """,
         doc_md="Copies raw data from the landing zone (/raw) to the staging area (/pre-processed).",
