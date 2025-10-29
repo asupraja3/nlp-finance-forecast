@@ -30,13 +30,14 @@ graph TD
 
 ### Tech Stack 🛠️
 
-* **Orchestrator:** Apache Airflow
+* **Orchestrator:** Apache Airflow (operators: BashOperator, FileSensor, EmptyOperator; uses pendulum)
 * **Environment:** Docker & Astro CLI
 * **Data Processing:** Apache Spark (`pyspark`)
-* **NLP:** Hugging Face Transformers
+* **NLP:** Hugging Face Transformers (FinBERT)
 * **ML:** `scikit-learn` & `MLflow`
-* **Data Sources:** `yfinance`
+* **Data Sources:** `yfinance`, `parquet`, `CSV`
 * **Dashboard:** `Streamlit`
+* **Dev & Test:** PyCharm, Jupyter notebooks, pytest (tests/), Git / GitHub
 
 ---
 
@@ -57,4 +58,6 @@ Once running, access the Airflow UI at `http://localhost:8080` (login: `admin`/`
 * Transition to a real-time streaming architecture with Kafka.
 * Implement more advanced time-series models (LSTMs, Transformers).
 * Deploy the pipeline to a cloud environment (AWS, GCP, Azure).
-* Build a CI/CD pipeline for automated testing and deployment..
+* Build a CI/CD pipeline for automated testing and deployment.
+
+  <p align="right"> <img src="https://hackatime-badge.hackclub.com/U091WBXJ59C/nlp-finance-forecast"/>
