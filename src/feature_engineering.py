@@ -6,7 +6,7 @@
 # 3. Engineer "technical" features from stock prices (e.g., moving averages).
 # 4. Engineer "sentiment" features from news headlines using a FinBERT NLP model.
 # 5. Join these two feature sets together by date.
-# 6. Save the final, model-ready data to the '/processed' directory.
+# 6. Save the final, model-ready data to the '/processed' directory. change
 
 import sys
 import os
