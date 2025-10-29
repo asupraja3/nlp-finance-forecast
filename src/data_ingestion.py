@@ -12,7 +12,8 @@ END_DATE = "2024-12-31"
 
 # Define the file paths for saving our raw data.
 # Using a structured path like this is a best practice.
-RAW_DATA_DIR = r"D:\Work_USA\AIML\Projects\nlp-finance-forecast\data\raw"
+# RAW_DATA_DIR = r"D:\Work_USA\AIML\Projects\nlp-finance-forecast\data\raw"
+RAW_DATA_DIR = r"/usr/local/airflow/src/data/raw"
 STOCK_PRICES_FILE = os.path.join(RAW_DATA_DIR, "stock_prices.csv")
 NEWS_DATA_INSTRUCTIONS_FILE = os.path.join(RAW_DATA_DIR, "news_data_readme.txt")
 
