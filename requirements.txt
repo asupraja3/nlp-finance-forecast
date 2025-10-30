@@ -8,3 +8,4 @@ mlflow
 scikit-learn # For quick checks and metrics
 # For the Dashboard (can be in a separate env)
 streamlit==1.28.0
+astro-run-dag # This package is needed for the astro run command. It will be removed before a deploy

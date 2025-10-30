@@ -32,7 +32,7 @@ st.set_page_config(
 # Your 'predict.py' writes to this file.
 # Your 'update_streamlit_app' task 'touches' this file.
 # This app *reads* from this file.
-PREDICTION_FILE_PATH = "streamlit/prediction_output.csv"
+PREDICTION_FILE_PATH = r"D:\Work_USA\AIML\Projects\nlp-finance-forecast\streamlit\prediction_output.csv"
 
 
 # --- Function to Load Data ---

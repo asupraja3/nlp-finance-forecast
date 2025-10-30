@@ -13,7 +13,7 @@
 import sys
 import os
 from pyspark.sql import SparkSession, Window
-from pyspark.sql.functions import col, lag, lead, when, lit
+from pyspark.sql.functions import col, lag, lead, when, lit, row_number
 from pyspark.ml import Pipeline
 from pyspark.ml.feature import VectorAssembler
 from pyspark.ml.classification import LogisticRegression
@@ -118,19 +118,17 @@ def train_model(spark):
 
     print("Splitting data into train and test sets (80/20 chronological)...")
 
-    # 'randomSplit' is bad here. We use 'filter' based on a date or a percentile.
-    # Using 'approxQuantile' is a robust way to find the 80% split point.
-    split_point = labeled_df.approxQuantile("unix_timestamp(Date)", [0.8], 0.01)[0]
+    # Sort chronologically
+    ordered_df = labeled_df.orderBy("Date").withColumn(
+        "row_num", row_number().over(Window.orderBy("Date"))
+    )
 
-    # Convert timestamp back to date for filtering
-    split_date = spark.createDataFrame([(int(split_point),)], ["ts"]) \
-        .select(col("ts").cast("timestamp").cast("date").alias("split_date")) \
-        .first().split_date
+    # Compute cutoff index (80%)
+    total_rows = ordered_df.count()
+    cut_index = int(total_rows * 0.8)
 
-    print(f"Splitting data at date: {split_date}")
-
-    train_data = labeled_df.filter(col("Date") <= split_date)
-    test_data = labeled_df.filter(col("Date") > split_date)
+    train_data = ordered_df.filter(col("row_num") <= cut_index).drop("row_num")
+    test_data = ordered_df.filter(col("row_num") > cut_index).drop("row_num")
 
     print(f"Training data count: {train_data.count()}")
     print(f"Test data count: {test_data.count()}")
