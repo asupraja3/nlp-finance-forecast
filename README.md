@@ -42,7 +42,8 @@ graph TD
 ---
 
 ### Airflow DAG
-<img width="1920" height="1200" alt="Screenshot (18)" src="https://github.com/user-attachments/assets/7e0721b5-08b7-4f90-8bb0-bbad788b5fcb" />
+<img width="777" height="403" alt="image" src="https://github.com/user-attachments/assets/d92eaa9b-d286-43ea-bb6c-be93e073089d" />
+
 
 ---
 
