@@ -41,6 +41,18 @@ graph TD
 
 ---
 
+### Airflow DAG
+<img width="1920" height="1200" alt="Screenshot (18)" src="https://github.com/user-attachments/assets/7e0721b5-08b7-4f90-8bb0-bbad788b5fcb" />
+
+---
+
+### Streamlit App
+**Link:** https://nlp-finance-forecast-jcvsw7mecpiz2u46w4jq7z.streamlit.app/
+
+<img width="1919" height="994" alt="Screenshot 2025-10-30 121341" src="https://github.com/user-attachments/assets/29ffc5dd-f141-449f-bea6-4669a428a9f9" />
+
+---
+
 ### How to Run This Project
 
 **Prerequisites:** Docker Desktop & Astro CLI must be installed.
