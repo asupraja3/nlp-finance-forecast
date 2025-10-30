@@ -49,8 +49,7 @@ graph TD
 
 ### Streamlit App
 **Link:** https://nlp-finance-forecast-jcvsw7mecpiz2u46w4jq7z.streamlit.app/
-
-<img width="1919" height="994" alt="Screenshot 2025-10-30 121341" src="https://github.com/user-attachments/assets/29ffc5dd-f141-449f-bea6-4669a428a9f9" />
+<img width="705" height="365" alt="image" src="https://github.com/user-attachments/assets/449f7c44-0806-43f9-adaa-e3293b238118" />
 
 ---
 
