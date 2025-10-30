@@ -20,7 +20,8 @@ from pyspark.sql.functions import (
     concat_ws,
     regexp_replace,
     coalesce,
-    lit
+    lit,
+    pandas_udf, PandasUDFType
 )
 from pyspark.sql.types import FloatType, StringType, DoubleType, DateType
 
@@ -33,17 +34,34 @@ from pyspark.sql.types import FloatType, StringType, DoubleType, DateType
 #
 # For our project, we load it directly.
 try:
-    from transformers import pipeline
+    # from transformers import pipeline
+    from transformers import AutoTokenizer, AutoModelForSequenceClassification, pipeline
 
-    # We initialize the FinBERT sentiment model.
-    # This model is specifically trained on financial text.
     print("Loading FinBERT sentiment pipeline...")
-    # Using "pipeline" handles all the tokenization and model logic for us.
+    tokenizer = AutoTokenizer.from_pretrained(
+        "ProsusAI/finbert",
+        use_fast=True,
+        model_max_length=512,  # enforce 512 cap
+        truncation_side="right"
+    )
+    model = AutoModelForSequenceClassification.from_pretrained("ProsusAI/finbert")
+
     sentiment_pipeline = pipeline(
         "sentiment-analysis",
-        model="ProsusAI/finbert"
+        model=model,
+        tokenizer=tokenizer
     )
-    print("FinBERT model loaded successfully.")
+    # print("FinBERT model loaded successfully.")
+    # # We initialize the FinBERT sentiment model.
+    # # This model is specifically trained on financial text.
+    # print("Loading FinBERT sentiment pipeline...")
+    # # Using "pipeline" handles all the tokenization and model logic for us.
+    # sentiment_pipeline = pipeline(
+    #     "sentiment-analysis",
+    #     model="ProsusAI/finbert"
+    # )
+    # print("FinBERT model loaded successfully.")
+
 except ImportError:
     print("Error: 'transformers' library not found.")
     print("Please install it in your Airflow environment: pip install transformers")
@@ -54,54 +72,104 @@ except Exception as e:
     sys.exit(1)
 
 
+# # --- Function 1: NLP Sentiment UDF ---
+# def get_sentiment_score(text_batch):
+#     """
+#     Applies the FinBERT model to a batch of text.
+#
+#     FinBERT returns a list of dictionaries, e.g.:
+#     [{'label': 'positive', 'score': 0.9}, {'label': 'negative', 'score': 0.05}, ...]
+#
+#     We'll simplify this to a single score: positive_score - negative_score
+#     A score of +0.9 means very positive, -0.8 means very negative.
+#     """
+#     try:
+#         results = []
+#         # Process each text string in the batch (Spark sends data in batches)
+#         for text in text_batch:
+#             # Handle empty or null text
+#             if not text or text.strip() == "":
+#                 results.append(0.0)
+#                 continue
+#
+#             # Run the sentiment analysis pipeline
+#             scores = sentiment_pipeline(text)
+#
+#             # Default to neutral
+#             sentiment_score = 0.0
+#
+#             # Sum up the scores based on their label
+#             for s in scores:
+#                 if s['label'] == 'positive':
+#                     sentiment_score += s['score']
+#                 elif s['label'] == 'negative':
+#                     sentiment_score -= s['score']
+#                 # We ignore 'neutral' to make the signal clearer
+#
+#             results.append(sentiment_score)
+#         return results
+#     except Exception as e:
+#         # On any error, just return a neutral score
+#         print(f"Error in sentiment UDF: {e}")
+#         return [0.0] * len(text_batch)
+
 # --- Function 1: NLP Sentiment UDF ---
+
+        # """
+        # Applies the FinBERT model to a batch of text.
+        #
+        # FinBERT returns a list of dictionaries, e.g.:
+        # [{'label': 'positive', 'score': 0.9}, {'label': 'negative', 'score': 0.05}, ...]
+        #
+        # We'll simplify this to a single score: positive_score - negative_score
+        # A score of +0.9 means very positive, -0.8 means very negative.
+        # """
 def get_sentiment_score(text_batch):
-    """
-    Applies the FinBERT model to a batch of text.
-
-    FinBERT returns a list of dictionaries, e.g.:
-    [{'label': 'positive', 'score': 0.9}, {'label': 'negative', 'score': 0.05}, ...]
-
-    We'll simplify this to a single score: positive_score - negative_score
-    A score of +0.9 means very positive, -0.8 means very negative.
-    """
     try:
         results = []
-        # Process each text string in the batch (Spark sends data in batches)
         for text in text_batch:
-            # Handle empty or null text
-            if not text or text.strip() == "":
+            if not text or not text.strip():
                 results.append(0.0)
                 continue
 
-            # Run the sentiment analysis pipeline
-            scores = sentiment_pipeline(text)
+            # Force batched call so shape is always [[{label,score}...]]
+            out = sentiment_pipeline(
+                [text],                       # <= batch!
+                truncation=True,
+                max_length=512,
+                return_all_scores=True
+            )[0]
 
-            # Default to neutral
-            sentiment_score = 0.0
+            # out is now a list of dicts
+            if isinstance(out, dict):
+                scores_list = [out]
+            else:
+                scores_list = out
 
-            # Sum up the scores based on their label
-            for s in scores:
-                if s['label'] == 'positive':
-                    sentiment_score += s['score']
-                elif s['label'] == 'negative':
-                    sentiment_score -= s['score']
-                # We ignore 'neutral' to make the signal clearer
-
-            results.append(sentiment_score)
+            probs = {d["label"].lower(): float(d["score"]) for d in scores_list}
+            results.append(probs.get("positive", 0.0) - probs.get("negative", 0.0))
         return results
     except Exception as e:
-        # On any error, just return a neutral score
         print(f"Error in sentiment UDF: {e}")
         return [0.0] * len(text_batch)
 
+def score_one(text: str) -> float:
+    if not text or not text.strip():
+        return 0.0
+    out = sentiment_pipeline([text], truncation=True, max_length=512, return_all_scores=True)[0]
+    if isinstance(out, dict):
+        scores_list = [out]
+    else:
+        scores_list = out
+    probs = {d["label"].lower(): float(d["score"]) for d in scores_list}
+    return probs.get("positive", 0.0) - probs.get("negative", 0.0)
 
 # --- Register the UDF with Spark ---
 # We register our Python function as a PySpark User-Defined Function (UDF).
 # This allows us to call our Python/FinBERT code on each row of the Spark DataFrame.
 # NOTE: Pandas UDFs (vectorized) are much faster, but this is simpler to understand.
-sentiment_udf = udf(lambda text: get_sentiment_score([text])[0], FloatType())
-
+# sentiment_udf = udf(lambda text: get_sentiment_score([text])[0], FloatType())
+sentiment_udf = udf(score_one, FloatType())
 
 # --- Function 2: Main Data Processing ---
 def process_data(spark):
@@ -130,7 +198,7 @@ def process_data(spark):
     # 2. Cast columns from string to their correct types.
     try:
         stock_df = spark.read.option("header", "true").csv(STOCK_DATA_PATH)
-
+        stock_df = stock_df.limit(50)
         # 1. Filter out the bad header row
         stock_df = stock_df.filter(col("Date") != "AAPL") \
             .filter(col("Date").isNotNull())
@@ -160,7 +228,7 @@ def process_data(spark):
     # 3. Cast 'Date' column.
     try:
         news_df = spark.read.option("header", "true").csv(NEWS_DATA_PATH)
-
+        news_df = news_df.limit(50)
         # 1. Create a list of the 'TopN' columns
         headline_cols = [f"Top{i}" for i in range(1, 26)]
 
@@ -199,11 +267,11 @@ def process_data(spark):
 
     # Define a Window. This tells Spark "group by date".
     # This window is just for the lag feature.
-    window_spec_orderByDate = Window.orderBy("Date")
+    window_spec_orderByDate = Window.partitionBy().orderBy("Date")
 
     # This window is for the 5-day moving average.
     # It includes the current row and the 4 previous rows.
-    window_spec_5day = Window.orderBy("Date").rowsBetween(-4, 0)
+    window_spec_5day = Window.partitionBy().orderBy("Date").rowsBetween(-4,0)
 
     features_df = stock_df.withColumn(
         "SMA_5",
@@ -280,6 +348,11 @@ if __name__ == "__main__":
     try:
         spark = SparkSession.builder \
             .appName("StockFeatureEngineering") \
+            .master("local[4]") \
+            .config("spark.ui.enabled", "true") \
+            .config("spark.sql.shuffle.partitions", "4") \
+            .config("spark.sql.execution.arrow.pyspark.enabled", "true") \
+            .config("spark.ui.port", "4040") \
             .getOrCreate()
 
         # Set log level to WARN to reduce console spam
