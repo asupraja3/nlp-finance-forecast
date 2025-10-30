@@ -32,8 +32,17 @@ st.set_page_config(
 # Your 'predict.py' writes to this file.
 # Your 'update_streamlit_app' task 'touches' this file.
 # This app *reads* from this file.
-PREDICTION_FILE_PATH = r"D:\Work_USA\AIML\Projects\nlp-finance-forecast\streamlit\prediction_output.csv"
+# PREDICTION_FILE_PATH = r"D:\Work_USA\AIML\Projects\nlp-finance-forecast\streamlit\prediction_output.csv"
 
+from pathlib import Path
+
+# 1) allow override via env (e.g., S3/Blob/HTTP URL in the future)
+CSV_ENV = os.getenv("PREDICTION_CSV", "").strip()
+
+# 2) local fallback to a file inside the repo (commit a tiny sample CSV)
+DEFAULT_CSV = Path(__file__).parent / "prediction_output.csv"
+
+PREDICTION_FILE_PATH = CSV_ENV if CSV_ENV else str(DEFAULT_CSV)
 
 # --- Function to Load Data ---
 
