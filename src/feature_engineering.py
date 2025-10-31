@@ -176,6 +176,10 @@ def process_data(spark):
     """
     Main function to run the end-to-end data processing pipeline.
     """
+    
+    # Initialize variables for cleanup
+    stock_df = None
+    news_df = None
 
     # --- Define File Paths ---
     # These paths are INSIDE the Airflow environment, matching your DAG.
@@ -369,8 +373,10 @@ def process_data(spark):
         print(f"Error saving final data to Parquet: {e}")
     finally:
         # Unpersist cached DataFrames to free memory
-        stock_df.unpersist()
-        news_df.unpersist()
+        if stock_df is not None:
+            stock_df.unpersist()
+        if news_df is not None:
+            news_df.unpersist()
 
 
 # --- Main execution ---

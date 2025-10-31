@@ -62,6 +62,9 @@ def train_model(spark):
     """
     Main function to run the end-to-end model training pipeline.
     """
+    
+    # Initialize variables for cleanup
+    features_df = None
 
     # --- Define File Paths ---
     INPUT_PATH = "/usr/local/airflow/data/processed/features.parquet"
@@ -192,7 +195,8 @@ def train_model(spark):
         print(f"Error saving model: {e}")
     finally:
         # Unpersist cached data to free memory
-        features_df.unpersist()
+        if features_df is not None:
+            features_df.unpersist()
 
 
 # --- Main execution ---
