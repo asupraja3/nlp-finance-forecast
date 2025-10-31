@@ -21,7 +21,7 @@ from pyspark.sql.functions import (
     regexp_replace,
     coalesce,
     lit,
-    pandas_udf, PandasUDFType
+    pandas_udf, PandasUDFType, broadcast
 )
 from pyspark.sql.types import FloatType, StringType, DoubleType, DateType
 
@@ -198,7 +198,6 @@ def process_data(spark):
     # 2. Cast columns from string to their correct types.
     try:
         stock_df = spark.read.option("header", "true").csv(STOCK_DATA_PATH)
-        stock_df = stock_df.limit(50)
         # 1. Filter out the bad header row
         stock_df = stock_df.filter(col("Date") != "AAPL") \
             .filter(col("Date").isNotNull())
@@ -213,6 +212,9 @@ def process_data(spark):
 
         # Drop any rows that failed casting
         stock_df = stock_df.dropna(subset=["Date", "Close"])
+        
+        # Cache stock data as it will be reused for feature engineering
+        stock_df.cache()
 
         print("Stock data loaded and cleaned.")
         stock_df.printSchema()
@@ -228,7 +230,6 @@ def process_data(spark):
     # 3. Cast 'Date' column.
     try:
         news_df = spark.read.option("header", "true").csv(NEWS_DATA_PATH)
-        news_df = news_df.limit(50)
         # 1. Create a list of the 'TopN' columns
         headline_cols = [f"Top{i}" for i in range(1, 26)]
 
@@ -252,6 +253,9 @@ def process_data(spark):
         # 3. Cast Date and select only the columns we need
         news_df = news_df.withColumn("Date", to_date(col("Date"), "yyyy-MM-dd")) \
             .select("Date", "all_headlines")
+        
+        # Cache news data as sentiment analysis will be applied
+        news_df.cache()
 
         print("News data loaded and cleaned.")
         news_df.printSchema()
@@ -302,11 +306,24 @@ def process_data(spark):
     # We'll do a 'left' join:
     # Keep all rows from 'features_df' (stock data)
     # and join any matching 'sentiment_df' (news data) rows.
-    final_df = features_df.join(
-        sentiment_df,
-        on="Date",
-        how="left"
-    )
+    # Use broadcast join for sentiment_df if it's small enough for better performance
+    print("Joining stock features with sentiment features...")
+    sentiment_count = sentiment_df.count()
+    
+    if sentiment_count < 10000:  # If sentiment data is small, use broadcast join
+        print(f"Using broadcast join (sentiment rows: {sentiment_count})")
+        final_df = features_df.join(
+            broadcast(sentiment_df),
+            on="Date",
+            how="left"
+        )
+    else:
+        print(f"Using standard join (sentiment rows: {sentiment_count})")
+        final_df = features_df.join(
+            sentiment_df,
+            on="Date",
+            how="left"
+        )
 
     print("Stock features and sentiment features joined.")
 
@@ -326,6 +343,19 @@ def process_data(spark):
     # 'overwrite' mode ensures the job can be re-run.
     try:
         print(f"Saving final features to {OUTPUT_PATH}...")
+        
+        # Optimize partitioning for large datasets
+        row_count = final_df.count()
+        print(f"Total rows to save: {row_count}")
+        
+        # Coalesce to reduce number of output files for small to medium datasets
+        if row_count < 100000:
+            final_df = final_df.coalesce(1)
+            print("Using single partition for small dataset")
+        elif row_count < 1000000:
+            final_df = final_df.coalesce(10)
+            print("Using 10 partitions for medium dataset")
+        
         final_df.write.mode("overwrite").parquet(OUTPUT_PATH)
         print("Processing complete. Final features saved.")
 
@@ -337,6 +367,10 @@ def process_data(spark):
 
     except Exception as e:
         print(f"Error saving final data to Parquet: {e}")
+    finally:
+        # Unpersist cached DataFrames to free memory
+        stock_df.unpersist()
+        news_df.unpersist()
 
 
 # --- Main execution ---
@@ -348,11 +382,21 @@ if __name__ == "__main__":
     try:
         spark = SparkSession.builder \
             .appName("StockFeatureEngineering") \
-            .master("local[4]") \
+            .master("local[*]") \
             .config("spark.ui.enabled", "true") \
-            .config("spark.sql.shuffle.partitions", "4") \
+            .config("spark.sql.shuffle.partitions", "200") \
             .config("spark.sql.execution.arrow.pyspark.enabled", "true") \
             .config("spark.ui.port", "4040") \
+            .config("spark.sql.adaptive.enabled", "true") \
+            .config("spark.sql.adaptive.coalescePartitions.enabled", "true") \
+            .config("spark.sql.adaptive.skewJoin.enabled", "true") \
+            .config("spark.driver.memory", "4g") \
+            .config("spark.executor.memory", "4g") \
+            .config("spark.memory.fraction", "0.8") \
+            .config("spark.memory.storageFraction", "0.3") \
+            .config("spark.sql.autoBroadcastJoinThreshold", "10485760") \
+            .config("spark.default.parallelism", "200") \
+            .config("spark.sql.files.maxPartitionBytes", "134217728") \
             .getOrCreate()
 
         # Set log level to WARN to reduce console spam

@@ -117,6 +117,11 @@ if __name__ == "__main__":
     try:
         spark = SparkSession.builder \
             .appName("StockModelInference") \
+            .master("local[*]") \
+            .config("spark.sql.adaptive.enabled", "true") \
+            .config("spark.driver.memory", "2g") \
+            .config("spark.executor.memory", "2g") \
+            .config("spark.sql.shuffle.partitions", "10") \
             .getOrCreate()
 
         spark.sparkContext.setLogLevel("WARN")
