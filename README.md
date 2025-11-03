@@ -62,14 +62,3 @@ graph TD
 3.  **Start the environment:** `astro dev start`
 
 Once running, access the Airflow UI at `http://localhost:8080` (login: `admin`/`admin`).
-
----
-
-### Future Prospects
-
-* Transition to a real-time streaming architecture with Kafka.
-* Implement more advanced time-series models (LSTMs, Transformers).
-* Deploy the pipeline to a cloud environment (AWS, GCP, Azure).
-* Build a CI/CD pipeline for automated testing and deployment.
-
-  <p align="right"> <img src="https://hackatime-badge.hackclub.com/U091WBXJ59C/nlp-finance-forecast"/>
