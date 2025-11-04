@@ -62,6 +62,9 @@ def train_model(spark):
     """
     Main function to run the end-to-end model training pipeline.
     """
+    
+    # Initialize variables for cleanup
+    features_df = None
 
     # --- Define File Paths ---
     INPUT_PATH = "/usr/local/airflow/data/processed/features.parquet"
@@ -78,7 +81,12 @@ def train_model(spark):
     try:
         features_df = spark.read.parquet(INPUT_PATH)
         features_df = features_df.orderBy("Date")
-        print("Processed data loaded successfully.")
+        
+        # Cache the data as it will be used multiple times
+        features_df.cache()
+        data_count = features_df.count()
+        
+        print(f"Processed data loaded successfully. Total rows: {data_count}")
     except Exception as e:
         print(f"Error loading processed data from {INPUT_PATH}: {e}")
         print("Did the 'feature_engineering.py' script run successfully?")
@@ -185,6 +193,10 @@ def train_model(spark):
         print("Model saved successfully.")
     except Exception as e:
         print(f"Error saving model: {e}")
+    finally:
+        # Unpersist cached data to free memory
+        if features_df is not None:
+            features_df.unpersist()
 
 
 # --- Main execution ---
@@ -192,6 +204,15 @@ if __name__ == "__main__":
     try:
         spark = SparkSession.builder \
             .appName("StockModelTraining") \
+            .master("local[*]") \
+            .config("spark.sql.adaptive.enabled", "true") \
+            .config("spark.sql.adaptive.coalescePartitions.enabled", "true") \
+            .config("spark.driver.memory", "4g") \
+            .config("spark.executor.memory", "4g") \
+            .config("spark.memory.fraction", "0.8") \
+            .config("spark.sql.shuffle.partitions", "200") \
+            .config("spark.default.parallelism", "200") \
+            .config("spark.serializer", "org.apache.spark.serializer.KryoSerializer") \
             .getOrCreate()
 
         spark.sparkContext.setLogLevel("WARN")
